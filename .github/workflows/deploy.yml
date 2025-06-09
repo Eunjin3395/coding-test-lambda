@@ -38,6 +38,9 @@ jobs:
           function_name: ${{ env.FUNCTION_NAME }}
           zip_file: lambda/daily/lambda.zip
 
+      - name: Wait for Lambda update to finish
+        run: sleep 10
+
       - name: Update Lambda environment variables
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
