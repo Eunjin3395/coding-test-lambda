@@ -1,10 +1,7 @@
 name: Deploy Lambda - daily
 
 on:
-  push:
-    paths:
-      - "lambda/daily/**"
-    branches: [main]
+  branches: [main]
 
 jobs:
   deploy:
