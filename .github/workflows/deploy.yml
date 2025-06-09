@@ -1,14 +1,15 @@
 name: Deploy Lambda - daily
 
 on:
-  branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     env:
-      FUNCTION_NAME: boj-daily-problem-handler
+      FUNCTION_NAME: org-daily-boj-bot
       REGION: ap-northeast-2
 
     steps:
@@ -33,8 +34,8 @@ jobs:
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: ap-northeast-2
-          function_name: org-daily-boj-bot
+          aws_region: ${{ env.REGION }}
+          function_name: ${{ env.FUNCTION_NAME }}
           zip_file: lambda/daily/lambda.zip
 
       - name: Update Lambda environment variables
