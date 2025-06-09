@@ -276,7 +276,7 @@ const sendDiscord = async (problemData, issueUrls, issueSuccess, notionSuccess) 
 
 // Lambda에서 실행될 핸들러
 const handler = async (event) => {
-  const problemData = await getRandomProblems(1, 2, 3);
+  const problemData = await getRandomProblems(1, 1, 1);
   if (!problemData.length) return { statusCode: 500, body: JSON.stringify({ error: "Failed to fetch problem" }) };
   console.log(problemData);
   const { success: issueSuccess, issueUrls } = await createIssue(problemData);
