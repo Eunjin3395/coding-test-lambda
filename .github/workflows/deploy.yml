@@ -29,7 +29,7 @@ jobs:
 
       - name: Zip Lambda function
         working-directory: ./lambda/daily
-        run: zip -r ../lambda.zip .
+        run: zip -r lambda.zip .
 
       - name: Deploy to AWS Lambda
         uses: appleboy/lambda-action@v0.1.1
@@ -38,7 +38,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ap-northeast-2
           function_name: org-daily-boj-bot
-          zip_file: lambda.zip
+          zip_file: lambda/daily/lambda.zip
 
       - name: Update Lambda environment variables
         run: |
@@ -53,6 +53,6 @@ jobs:
               NOTION_DATABASE_ID='${{ secrets.NOTION_DATABASE_ID }}',
               ASSIGNEES='${{ secrets.ASSIGNEES }}',
               IMP_RANDOM_QUERY='${{ secrets.IMP_RANDOM_QUERY }}',
-              QUERY_FORMAT=*{min}..{max}{participants}+s%23{minParticipants}..+%25ko+%23{tag}&page=1&sort=random&direction=asc,
+              QUERY_FORMAT='${{ secrets.QUERY_FORMAT }}',
               PARTICIPANTS='${{ secrets.PARTICIPANTS }}'
             }"
