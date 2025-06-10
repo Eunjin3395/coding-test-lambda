@@ -52,8 +52,9 @@ jobs:
           --function-name $FUNCTION_NAME \
           --region $REGION \
           --environment "Variables={
-            DISCORD_WEBHOOK='${{ secrets.DISCORD_WEBHOOK }}',
-            NOTION_TOKEN='${{ secrets.NOTION_TOKEN }}',
-            NOTION_DATABASE_ID='${{ secrets.NOTION_DATABASE_ID }}',
+            DISCORD_WEBHOOK='${{ secrets.DISCORD_ATT_WEBHOOK }}',
             TARGET_CHANNEL_ID='${{ secrets.TARGET_CHANNEL_ID }}',
+            AWS_REGION='${{ secrets.ap-northeast-2 }}',
+            AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}',
+            AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}',
           }"
