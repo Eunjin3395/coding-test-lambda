@@ -54,7 +54,4 @@ jobs:
           --environment "Variables={
             DISCORD_WEBHOOK='${{ secrets.DISCORD_ATT_WEBHOOK }}',
             TARGET_CHANNEL_ID='${{ secrets.TARGET_CHANNEL_ID }}',
-            AWS_REGION=ap-northeast-2,
-            AWS_ACCESS_KEY_ID='${{ secrets.AWS_ACCESS_KEY_ID }}',
-            AWS_SECRET_ACCESS_KEY='${{ secrets.AWS_SECRET_ACCESS_KEY }}',
           }"
