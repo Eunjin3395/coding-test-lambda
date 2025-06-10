@@ -16,7 +16,7 @@ const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 const USER_MAP = {
   eunjin3395: "은진",
   rimi_lim: "효림",
-  jennyeunjin: "경은",
+  kslvy: "경은",
   j11gen: "성윤",
 };
 
@@ -66,13 +66,12 @@ const sendDiscord = async (joinedUsers, notJoinedUsers, now) => {
   }
 };
 
-const saveAttendanceMessage = async ({ messageId, channelId, joinedUsers, lateUsers, sentAt }) => {
+const saveAttendanceMessage = async ({ messageId, joinedUsers, lateUsers, sentAt }) => {
   const date = dayjs(sentAt).tz("Asia/Seoul").format("YYYY-MM-DD");
 
   const item = {
     date, // 파티션 키
-    channelId, // 정렬 키
-    messageId,
+    messageId, // 정렬 키
     sentAt,
     attendance: {
       joined: joinedUsers,
@@ -87,7 +86,7 @@ const saveAttendanceMessage = async ({ messageId, channelId, joinedUsers, lateUs
     })
     .promise();
 
-  console.log(`✅ 출석 기록 저장 완료 (${date}, ${channelId})`);
+  console.log(`✅ 출석 기록 저장 완료 (${date}, ${messageId})`);
 };
 
 // ✅ 메인 Lambda 함수
@@ -118,7 +117,6 @@ const handler = async () => {
 
     await saveAttendanceMessage({
       messageId,
-      channelId: TARGET_CHANNEL_ID,
       joinedUsers,
       lateUsers,
       sentAt: now,
