@@ -10,7 +10,8 @@ const dynamo = new AWS.DynamoDB.DocumentClient({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
-const TABLE_NAME = "Attendance";
+const ATTENDANCE_TABLE = "Attendance";
+const PROBLEM_HISTORY_TABLE = "ProblemHistory";
 
 const USER_MAP = {
   Eunjin3395: "eunjin3395",
@@ -20,8 +21,8 @@ const USER_MAP = {
 };
 
 const handler = async (event) => {
-  const body = event.body ? JSON.parse(event.body) : {};
-  const { prAuthor, problemId } = body;
+  const prAuthor = event.prAuthor;
+  const problemId = event.problemId;
 
   if (!prAuthor || !problemId) {
     return {
@@ -42,8 +43,25 @@ const handler = async (event) => {
   const today = dayjs().tz("Asia/Seoul").format("YYYY-MM-DD");
 
   try {
-    const getResult = await dynamo.get({ TableName: TABLE_NAME, Key: { date: today, username } }).promise();
+    // ✅ ProblemHistory에서 문제 번호 유효성 확인
+    const problemHistoryResult = await dynamo
+      .get({
+        TableName: PROBLEM_HISTORY_TABLE,
+        Key: { date: today },
+      })
+      .promise();
 
+    const validProblems = problemHistoryResult.Item?.problems || [];
+
+    if (!validProblems.includes(normalizedProblemId)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: `문제 ${normalizedProblemId}는 ${today}에 유효하지 않은 문제입니다.` }),
+      };
+    }
+
+    // ✅ Attendance에서 기존 PR 목록 가져오기
+    const getResult = await dynamo.get({ TableName: ATTENDANCE_TABLE, Key: { date: today, username } }).promise();
     const existingPr = getResult.Item?.pr || [];
 
     if (existingPr.includes(normalizedProblemId)) {
@@ -53,11 +71,12 @@ const handler = async (event) => {
       };
     }
 
+    // ✅ Attendance의 pr 필드 업데이트
     const updatedPr = [...existingPr, normalizedProblemId];
 
     await dynamo
       .update({
-        TableName: TABLE_NAME,
+        TableName: ATTENDANCE_TABLE,
         Key: { date: today, username },
         UpdateExpression: "SET pr = :updatedPr",
         ExpressionAttributeValues: { ":updatedPr": updatedPr },
