@@ -1,5 +1,6 @@
 const fs = require("fs");
 const axios = require("axios");
+const AWS = require("aws-sdk");
 require("dotenv").config();
 
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
@@ -17,6 +18,8 @@ const SOLVEDAC_URL = "https://solved.ac/api/v3/search/problem";
 const BAEKJOON_URL = "https://www.acmicpc.net";
 const NOTION_PAGE_URL = "https://api.notion.com/v1/pages";
 
+const PROBLEM_HISTORY_TABLE = "ProblemHistory";
+
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
 const LEVELS = ["UR", "B5", "B4", "B3", "B2", "B1", "S5", "S4", "S3", "S2", "S1", "G5", "G4", "G3", "G2", "G1"];
 
@@ -24,6 +27,13 @@ const LEVELS = ["UR", "B5", "B4", "B3", "B2", "B1", "S5", "S4", "S3", "S2", "S1"
 const POOL = JSON.parse(fs.readFileSync("pool.json", "utf-8"));
 const SELECTED_POOL = POOL.selectedPool;
 const TOTAL_POOL = POOL.totalPool;
+
+// dynamoDB 연동
+const dynamo = new AWS.DynamoDB.DocumentClient({
+  region: "ap-northeast-2",
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
 
 // KST 기준 오늘 날짜 (YYMMDD)
 const getTodayKST = () => {
@@ -252,6 +262,40 @@ const addToNotionDatabase = async (problemData) => {
   }
 };
 
+/**
+ * ProblemHistory 테이블에 문제 번호 저장
+ * @param {string[]} problemData - 문제 정보 배열
+ */
+const insertProblemHistory = async (problemData) => {
+  const targetDate = getTodayKST_ISO();
+
+  if (!Array.isArray(problemData) || problemData.length === 0) {
+    throw new Error("problemData 배열이 비어있거나 유효하지 않습니다.");
+  }
+
+  const problems = problemData.map((p) => String(p.id)).filter(Boolean);
+
+  if (problems.length === 0) {
+    throw new Error("유효한 문제 id가 없습니다.");
+  }
+
+  const params = {
+    TableName: PROBLEM_HISTORY_TABLE,
+    Item: {
+      date: targetDate,
+      problems: problems,
+    },
+  };
+
+  try {
+    await dynamo.put(params).promise();
+    console.log(`✅ ${targetDate} 문제 목록 저장 완료:`, problems);
+  } catch (err) {
+    console.error("❌ 문제 저장 실패:", err);
+    throw err;
+  }
+};
+
 // 디스코드 메시지 전송
 const sendDiscord = async (problemData, issueUrls, issueSuccess, notionSuccess) => {
   try {
@@ -281,6 +325,7 @@ const handler = async (event) => {
   console.log(problemData);
   const { success: issueSuccess, issueUrls } = await createIssue(problemData);
   const notionSuccess = await addToNotionDatabase(problemData);
+  await insertProblemHistory(problemData);
   await sendDiscord(problemData, issueUrls, issueSuccess, notionSuccess);
 
   return { statusCode: 200, body: JSON.stringify({ problemData, issueSuccess, notionSuccess }) };
