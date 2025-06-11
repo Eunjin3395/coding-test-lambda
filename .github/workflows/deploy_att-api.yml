@@ -1,0 +1,42 @@
+name: Deploy Lambda - att-check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lambda/attendance_api/**"
+      - ".github/workflows/deploy-att-api.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      FUNCTION_NAME: org-att-api
+      REGION: ap-northeast-2
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: ./lambda/attendance_api
+        run: npm install --omit=dev
+
+      - name: Zip Lambda function
+        working-directory: ./lambda/attendance_api
+        run: zip -r lambda.zip .
+
+      - name: Deploy to AWS Lambda
+        uses: appleboy/lambda-action@v0.1.1
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ env.REGION }}
+          function_name: ${{ env.FUNCTION_NAME }}
+          zip_file: lambda/attendance_api/lambda.zip
