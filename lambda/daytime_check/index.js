@@ -81,10 +81,12 @@ const handler = async () => {
 
     // 출석 상태 업데이트
     if (attendance !== "dayoff") {
-      if (pr.length >= 2) {
-        newStatus = joinedAt && dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline1) ? "present" : "late";
+      if (!joinedAt) {
+        newStatus = "absent";
+      } else if (pr.length >= 2) {
+        newStatus = dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline1) ? "present" : "late";
       } else {
-        newStatus = joinedAt && dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline2) ? "ongoing" : "absent";
+        newStatus = dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline2) ? "ongoing" : "absent";
       }
 
       await dynamo
