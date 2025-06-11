@@ -55,7 +55,7 @@ jobs:
           --function-name $FUNCTION_NAME \
           --region $REGION \
           --environment "Variables={
-            DISCORD_WEBHOOK='${{ secrets.DISCORD_WEBHOOK }}',
+            DISCORD_WEBHOOK='${{ secrets.DISCORD_NOTICE_WEBHOOK }}',
             NOTION_TOKEN='${{ secrets.NOTION_TOKEN }}',
             NOTION_DATABASE_ID='${{ secrets.NOTION_DATABASE_ID }}',
           }"
