@@ -3,6 +3,9 @@ name: Deploy Lambda - daily
 on:
   push:
     branches: [main]
+    paths:
+      - "lambda/daily/**"
+      - ".github/workflows/deploy-daily.yml"
 
 jobs:
   deploy:

@@ -3,6 +3,9 @@ name: Deploy Lambda - att-check
 on:
   push:
     branches: [main]
+    paths:
+      - "lambda/att_check/**"
+      - ".github/workflows/deploy-att-check.yml"
 
 jobs:
   deploy:

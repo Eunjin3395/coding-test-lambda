@@ -3,6 +3,9 @@ name: Deploy Lambda - stats
 on:
   push:
     branches: [main]
+    paths:
+      - "lambda/stats/**"
+      - ".github/workflows/deploy-stats.yml"
 
 jobs:
   deploy:
