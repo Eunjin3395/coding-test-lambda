@@ -1,0 +1,59 @@
+name: Deploy Lambda - daytime-check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lambda/daytime_check/**"
+      - ".github/workflows/deploy-daytime-check.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      FUNCTION_NAME: org-daytime-check-bot
+      REGION: ap-northeast-2
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: ./lambda/daytime_check
+        run: npm install --omit=dev
+
+      - name: Zip Lambda function
+        working-directory: ./lambda/daytime_check
+        run: zip -r lambda.zip .
+
+      - name: Deploy to AWS Lambda
+        uses: appleboy/lambda-action@v0.1.1
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ env.REGION }}
+          function_name: ${{ env.FUNCTION_NAME }}
+          zip_file: lambda/daytime_check/lambda.zip
+
+      - name: Wait for Lambda update to finish
+        run: sleep 10
+
+      - name: Update Lambda environment variables
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          FUNCTION_NAME: ${{ env.FUNCTION_NAME }}
+          REGION: ${{ env.REGION }}
+        run: |
+          aws lambda update-function-configuration \
+          --function-name $FUNCTION_NAME \
+          --region $REGION \
+          --environment "Variables={
+            DISCORD_WEBHOOK='${{ secrets.DISCORD_ATT_WEBHOOK }}',
+          }"
