@@ -29,9 +29,9 @@ const STATUS_MAP = {
   present: "출석 🟢",
   wildcard_present: "출석* 🟢",
   late: "지각 🟠",
-  wildcard_late: "지각 🟠",
+  wildcard_late: "지각* 🟠",
   ongoing: "진행 🟡",
-  wildcard_ongoing: "진행 🟡",
+  wildcard_ongoing: "진행* 🟡",
   dayoff: "휴무 :white_circle:",
   absent: "결석 🔴",
 };
@@ -91,6 +91,8 @@ const handler = async () => {
         // 특수 출석
         if (!hasJoined) {
           newStatus = "absent"; // 입장 안한 경우
+        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline2)) {
+          newStatus = "absent"; // 입장 시각 결석인 경우
         } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
           newStatus = "wildcard_late"; // 입장 시각 지각인 경우
         } else if (pr.length >= 1) {
@@ -102,6 +104,8 @@ const handler = async () => {
         // 일반 출석
         if (!hasJoined) {
           newStatus = "absent"; // 입장 안한 경우
+        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline2)) {
+          newStatus = "absent"; // 입장 시각 결석인 경우
         } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
           newStatus = "late"; // 입장 시각 지각인 경우
         } else if (pr.length >= 2) {

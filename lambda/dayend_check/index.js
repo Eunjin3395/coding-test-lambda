@@ -28,9 +28,9 @@ const STATUS_MAP = {
   present: "출석 🟢",
   wildcard_present: "출석* 🟢",
   late: "지각 🟠",
-  wildcard_late: "지각 🟠",
+  wildcard_late: "지각* 🟠",
   ongoing: "진행 🟡",
-  wildcard_ongoing: "진행 🟡",
+  wildcard_ongoing: "진행* 🟡",
   dayoff: "휴무 :white_circle:",
   absent: "결석 🔴",
 };
@@ -73,11 +73,7 @@ const handler = async () => {
       } else if (attendance === "late") {
         newStatus = prLen >= 2 ? "late" : "absent";
       } else if (attendance === "ongoing") {
-        if (prLen >= 2) {
-          newStatus = hasJoined && dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline1) ? "present" : "late";
-        } else {
-          newStatus = "absent";
-        }
+        newStatus = prLen >= 2 ? "present" : "absent";
       }
 
       // 업데이트
