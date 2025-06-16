@@ -26,10 +26,13 @@ const USER_MAP = {
 };
 const STATUS_MAP = {
   present: "출석 🟢",
+  wildcard_present: "출석* 🟢",
   late: "지각 🟠",
-  absent: "결석 🔴",
-  dayoff: "휴무 :white_circle:",
+  wildcard_late: "지각 🟠",
   ongoing: "진행 🟡",
+  wildcard_ongoing: "진행 🟡",
+  dayoff: "휴무 :white_circle:",
+  absent: "결석 🔴",
 };
 
 // join time 추출 util
@@ -57,15 +60,27 @@ const handler = async () => {
 
     const { joinedAt, pr = [], attendance } = Item;
     let newStatus = attendance;
+    const hasJoined = !!joinedAt;
 
-    // ✅ 상태가 ongoing인 경우만 재판정 및 DB 업데이트
-    if (attendance === "ongoing") {
-      if (pr.length >= 2) {
-        newStatus = joinedAt && dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline1) ? "present" : "late";
-      } else {
-        newStatus = "absent";
+    // 🎯 상태 재판정 조건 분기
+    if (["ongoing", "wildcard_ongoing", "wildcard_late", "late"].includes(attendance)) {
+      const prLen = pr.length;
+
+      if (attendance === "wildcard_ongoing") {
+        newStatus = prLen >= 1 ? "wildcard_present" : "absent";
+      } else if (attendance === "wildcard_late") {
+        newStatus = prLen >= 1 ? "wildcard_late" : "absent";
+      } else if (attendance === "late") {
+        newStatus = prLen >= 2 ? "late" : "absent";
+      } else if (attendance === "ongoing") {
+        if (prLen >= 2) {
+          newStatus = hasJoined && dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline1) ? "present" : "late";
+        } else {
+          newStatus = "absent";
+        }
       }
 
+      // 업데이트
       await dynamo
         .update({
           TableName: ATTENDANCE_TABLE,
@@ -76,7 +91,6 @@ const handler = async () => {
         .promise();
     }
 
-    // ✅ 메시지용 결과에 모든 유저 추가
     resultSummary.push({
       username,
       attendance: STATUS_MAP[newStatus],

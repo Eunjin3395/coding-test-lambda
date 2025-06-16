@@ -24,10 +24,14 @@ const USER_MAP = {
   kslvy: "경은",
   j11gen: "성윤",
 };
+
 const STATUS_MAP = {
   present: "출석 🟢",
+  wildcard_present: "출석* 🟢",
   late: "지각 🟠",
+  wildcard_late: "지각 🟠",
   ongoing: "진행 🟡",
+  wildcard_ongoing: "진행 🟡",
   dayoff: "휴무 :white_circle:",
   absent: "결석 🔴",
 };
@@ -79,14 +83,32 @@ const handler = async () => {
 
     let newStatus = attendance;
 
-    // 출석 상태 업데이트
+    // 출석 상태 업데이트, 휴무인 경우 대상에서 제외
     if (attendance !== "dayoff") {
-      if (!joinedAt) {
-        newStatus = "absent";
-      } else if (pr.length >= 2) {
-        newStatus = dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline1) ? "present" : "late";
+      const hasJoined = !!joinedAt;
+
+      if (attendance === "wildcard") {
+        // 특수 출석
+        if (!hasJoined) {
+          newStatus = "absent"; // 입장 안한 경우
+        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
+          newStatus = "wildcard_late"; // 입장 시각 지각인 경우
+        } else if (pr.length >= 1) {
+          newStatus = "wildcard_present"; // 문제 1개 이상 제출한 경우
+        } else {
+          newStatus = "wildcard_ongoing";
+        }
       } else {
-        newStatus = dayjs.tz(joinedAt, "Asia/Seoul").isBefore(deadline2) ? "ongoing" : "absent";
+        // 일반 출석
+        if (!hasJoined) {
+          newStatus = "absent"; // 입장 안한 경우
+        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
+          newStatus = "late"; // 입장 시각 지각인 경우
+        } else if (pr.length >= 2) {
+          newStatus = "present"; // 문제 2개 이상 제출한 경우
+        } else {
+          newStatus = "ongoing";
+        }
       }
 
       await dynamo
