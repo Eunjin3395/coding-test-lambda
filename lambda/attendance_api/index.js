@@ -13,11 +13,14 @@ const dynamo = new AWS.DynamoDB.DocumentClient({
 const ATTENDANCE_TABLE = "Attendance";
 const PROBLEM_HISTORY_TABLE = "ProblemHistory";
 
+// github ID : discord ID
 const USER_MAP = {
   Eunjin3395: "eunjin3395",
   rimi3226: "rimi_lim",
   KII1ua: "j11gen",
   kslvy: "kslvy",
+  shoon95: "parksanghoon4817",
+  "3veryDay": "3veryday_22624",
 };
 
 const handler = async (event) => {

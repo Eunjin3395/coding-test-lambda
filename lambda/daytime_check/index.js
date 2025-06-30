@@ -20,9 +20,10 @@ const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 const USERNAMES = ["eunjin3395", "rimi_lim", "kslvy", "j11gen"];
 const USER_MAP = {
   eunjin3395: "은진",
-  rimi_lim: "효림",
   kslvy: "경은",
   j11gen: "성윤",
+  parksanghoon4817: "상훈",
+  "3veryDay": "현서",
 };
 
 const STATUS_MAP = {
