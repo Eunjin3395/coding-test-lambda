@@ -17,7 +17,6 @@ const PROBLEM_HISTORY_TABLE = "ProblemHistory";
 const USER_MAP = {
   Eunjin3395: "eunjin3395",
   KII1ua: "j11gen",
-  shoon95: "parksanghoon4817",
   "3veryDay": "haru_95532",
 };
 
