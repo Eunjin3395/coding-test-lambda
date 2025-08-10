@@ -53,15 +53,16 @@ jobs:
         run: |
           aws lambda update-function-configuration \
           --function-name $FUNCTION_NAME \
-          --region $REGION \
-          --environment "Variables={
-            DISCORD_WEBHOOK='${{ secrets.DISCORD_WEBHOOK }}',
-            GITHUB_API_URL='${{ secrets.GITHUBAPI_URL }}',
-            ACCESS_TOKEN='${{ secrets.ACCESS_TOKEN }}',
-            NOTION_TOKEN='${{ secrets.NOTION_TOKEN }}',
-            NOTION_DATABASE_ID='${{ secrets.NOTION_DATABASE_ID }}',
-            ASSIGNEES='${{ secrets.ASSIGNEES }}',
-            IMP_RANDOM_QUERY='${{ secrets.IMP_RANDOM_QUERY }}',
-            QUERY_FORMAT='${{ secrets.QUERY_FORMAT }}',
-            PARTICIPANTS='${{ secrets.PARTICIPANTS }}'
-          }"
+          --region $REGION 
+          # --region $REGION \
+          # --environment "Variables={
+          #   DISCORD_WEBHOOK='${{ secrets.DISCORD_WEBHOOK }}',
+          #   GITHUB_API_URL='${{ secrets.GITHUBAPI_URL }}',
+          #   ACCESS_TOKEN='${{ secrets.ACCESS_TOKEN }}',
+          #   NOTION_TOKEN='${{ secrets.NOTION_TOKEN }}',
+          #   NOTION_DATABASE_ID='${{ secrets.NOTION_DATABASE_ID }}',
+          #   ASSIGNEES='${{ secrets.ASSIGNEES }}',
+          #   IMP_RANDOM_QUERY='${{ secrets.IMP_RANDOM_QUERY }}',
+          #   QUERY_FORMAT='${{ secrets.QUERY_FORMAT }}',
+          #   PARTICIPANTS='${{ secrets.PARTICIPANTS }}'
+          # }"

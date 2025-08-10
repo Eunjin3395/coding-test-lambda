@@ -10,7 +10,9 @@ const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 const ASSIGNEES = process.env.ASSIGNEES ? process.env.ASSIGNEES.split(",") : ["Eunjin3395"]; // github 아이디
 const PARTICIPANTS = process.env.PARTICIPANTS ? process.env.PARTICIPANTS.split(",") : ["jennyeunjin"]; // solved.ac 아이디
-const IMP_RANDOM_QUERY = process.env.IMP_RANDOM_QUERY;
+const EXCLUDE_PARTICIPANTS = ["jennyeunjin", "skfnx13"];
+const IMP_RANDOM_QUERY_CMN = process.env.IMP_RANDOM_QUERY_CMN; // 공통 구현 쿼리
+const IMP_RANDOM_QUERY_INDV = process.env.IMP_RANDOM_QUERY_INDV; // 은진 개인 구현 쿼리
 
 const QUERY_FORMAT = process.env.QUERY_FORMAT;
 
@@ -55,6 +57,16 @@ const getTodayKST_ISO = () => {
   return kstDate.toISOString().split("T")[0]; // "YYYY-MM-DD" 포맷 반환
 };
 
+// KST 기준 오늘 요일
+function getKSTDayOfWeekShort() {
+  const now = new Date();
+
+  return now.toLocaleDateString("ko-KR", {
+    weekday: "short", // '월', '화', '수' 형식
+    timeZone: "Asia/Seoul",
+  });
+}
+
 // 배열 랜덤 섞기
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -65,8 +77,8 @@ const shuffleArray = (array) => {
 };
 
 // query string 생성
-function buildSolvedAcQuery({ tag, min, max, minParticipants }) {
-  const participantQuery = PARTICIPANTS.map((id) => `+!%40${encodeURIComponent(id)}`).join("");
+function buildSolvedAcQuery({ tag, min, max, minParticipants }, participants) {
+  const participantQuery = participants.map((id) => `+!%40${encodeURIComponent(id)}`).join("");
 
   const finalQuery = QUERY_FORMAT.replace("{min}", min)
     .replace("{max}", max)
@@ -85,13 +97,13 @@ const fetchProblemsFromSolvedAc = async (query, count = 1) => {
       headers: { "User-Agent": USER_AGENT },
     });
 
-    console.log("🔍 요청:", requestUrl);
-
     const items = response.data.items || [];
     if (items.length < count) {
       console.log("❌ 문제 부족:", query);
       return [];
     }
+
+    console.log(`🔍 요청: ${requestUrl}, 조회된 개수: ${items.length}`);
 
     return items.slice(0, count).map(({ problemId, titleKo, level, tags }) => ({
       id: problemId,
@@ -107,11 +119,12 @@ const fetchProblemsFromSolvedAc = async (query, count = 1) => {
 
 /**
  * 주어진 문제 pool에서 랜덤 태그의 유효한 문제를 랜덤하게 n개 추출
- * @param {Array} pool 문제 후보 풀 (selectedPool 또는 totalPool)
+ * @param {Array} pool  문제 후보 풀 (selectedPool 또는 totalPool)
  * @param {int} n 문제 개수
- * @returns {Promise<{ problem: Object, tag: string }>}
+ * @param {Array} participants 쿼리에 포함할 아이디 리스트
+ * @returns
  */
-const getValidProblemFromPool = async (pool, n) => {
+const getValidProblemFromPool = async (pool, n, participants) => {
   const shuffledPool = shuffleArray([...pool]); // 랜덤 순서
   const selectedTags = new Set();
   const selectedProblems = [];
@@ -120,7 +133,7 @@ const getValidProblemFromPool = async (pool, n) => {
     const tag = candidate.tag.trim();
     if (selectedTags.has(tag)) continue;
 
-    const query = buildSolvedAcQuery(candidate);
+    const query = buildSolvedAcQuery(candidate, participants);
     const problems = await fetchProblemsFromSolvedAc(query, 1);
 
     if (problems.length > 0) {
@@ -147,13 +160,13 @@ const getValidProblemFromPool = async (pool, n) => {
  * @param {*} t 전체 유형에서 t개 추출
  * @returns
  */
-const selectRanProblems = async (s, t) => {
+const selectRanProblems = async (s, t, participants) => {
   // 1. selectedPool에서 유효한 문제 s개 선택
-  const { problems: selectedProblem, tags: selectedTag } = await getValidProblemFromPool(SELECTED_POOL, s);
+  const { problems: selectedProblem, tags: selectedTag } = await getValidProblemFromPool(SELECTED_POOL, s, participants);
 
   // 2. totalPool에서 같은 태그 제외 후 유효한 문제 t개 선택
   const remaining = TOTAL_POOL.filter((p) => p.tag.trim() !== selectedTag);
-  const { problems: otherProblem } = await getValidProblemFromPool(remaining, t);
+  const { problems: otherProblem } = await getValidProblemFromPool(remaining, t, participants);
 
   // 리스트 병합 후 섞어서 반환
   const shuffled_problems = shuffleArray([...selectedProblem, ...otherProblem]);
@@ -162,12 +175,25 @@ const selectRanProblems = async (s, t) => {
 };
 
 /**
- * 구현 문제 랜덤 n개 추출
+ * 공통 구현 문제 랜덤 n개 추출
  * @param {int} n
  */
-const selectImpProblems = async (n) => {
-  const problem = await fetchProblemsFromSolvedAc(IMP_RANDOM_QUERY, n);
+const selectCommonImpProblems = async (n) => {
+  const problem = await fetchProblemsFromSolvedAc(IMP_RANDOM_QUERY_CMN, n, true);
   return problem;
+};
+
+/**
+ * 개인 구현 문제 랜덤 n개 추출
+ * @param {int} n
+ * @returns
+ */
+const selectIndvImpProblems = async (n) => {
+  const problem = await fetchProblemsFromSolvedAc(IMP_RANDOM_QUERY_INDV, n, true);
+  return problem.map((p) => ({
+    ...p,
+    isCommon: false,
+  }));
 };
 
 /**
@@ -178,15 +204,91 @@ const selectImpProblems = async (n) => {
  */
 const getRandomProblems = async (i, s, t) => {
   try {
-    const imp_problems = await selectImpProblems(i);
+    const imp_problems = await selectCommonImpProblems(i);
     const random_problems = await selectRanProblems(s, t);
-    const problems = [...imp_problems, ...random_problems];
+    const imp_problems_indv = await selectIndvImpProblems(i);
+    const problems = [...imp_problems, ...random_problems, ...imp_problems_indv];
 
     return problems;
   } catch (error) {
     console.error("Error fetching random problems:", error);
     return [];
   }
+};
+
+/**
+ * 월,화,금요일 공통 문제 및 추가 문제 추출
+ * @param {*} i
+ * @param {*} s
+ * @param {*} t
+ */
+const getRandomProblems_MTF = async (i, s, t) => {
+  let imp_problems = await selectCommonImpProblems(i); // 공통 구현 문제
+  imp_problems = imp_problems.map((p) => ({
+    ...p,
+    isCommon: true,
+  }));
+
+  let imp_problems_indv = await selectIndvImpProblems(i); // 추가 구현 문제
+  imp_problems_indv = imp_problems_indv.map((p) => ({
+    ...p,
+    isCommon: false,
+  }));
+
+  // 제외할 멤버 및 쿼리 대상 멤버 추출
+  const excludeId = EXCLUDE_PARTICIPANTS[Math.floor(Math.random() * EXCLUDE_PARTICIPANTS.length)];
+  const participants = PARTICIPANTS.filter((id) => id !== excludeId);
+  console.log(`❌ exclude Id: ${excludeId}, participants: ${participants}`);
+
+  let type_problems = await selectRanProblems(s, t, participants); // 공통 유형 문제
+  type_problems = type_problems.map((p) => ({
+    ...p,
+    isCommon: true,
+  }));
+
+  let type_problems_indv = await selectRanProblems(s, t, [excludeId]); // 추가 유형 문제
+  type_problems_indv = type_problems_indv.map((p) => ({
+    ...p,
+    isCommon: false,
+  }));
+
+  const problems = [...imp_problems, ...type_problems, ...imp_problems_indv, ...type_problems_indv];
+
+  return problems;
+};
+
+/**
+ * 수,목요일 공통 문제 및 추가 문제 추출
+ * @param {*} i
+ * @param {*} s
+ * @param {*} t
+ */
+const getRandomProblems_WT = async (i, s, t) => {
+  let imp_problems = await selectCommonImpProblems(i); // 공통 구현 문제
+  imp_problems = imp_problems.map((p) => ({
+    ...p,
+    isCommon: true,
+  }));
+
+  let imp_problems_indv = await selectIndvImpProblems(i); // 추가 구현 문제
+  imp_problems_indv = imp_problems_indv.map((p) => ({
+    ...p,
+    isCommon: false,
+  }));
+
+  // 제외할 멤버 및 쿼리 대상 멤버 추출
+  const excludeId = "skfnx13";
+  const participants = PARTICIPANTS.filter((id) => id !== excludeId);
+
+  let type_problems = await selectRanProblems(s, t, participants); // 공통 유형 문제
+  type_problems = type_problems.map((p) => ({
+    ...p,
+    isCommon: true,
+  }));
+
+  const problems = [...imp_problems, ...imp_problems_indv, ...type_problems];
+
+  return problems;
 };
 
 // github issue 생성
@@ -196,9 +298,9 @@ const createIssue = async (problemData) => {
 
     for (const problem of problemData) {
       const problemUrl = `https://www.acmicpc.net/problem/${problem.id}`;
-      let issueTitle = `${getTodayKST()} : [BOJ ${problem.id}] ${problem.title}`;
+      const isCommon = problem.isCommon ? "⭐️" : "⚡️";
+      let issueTitle = `${isCommon} ${getTodayKST()} : [BOJ ${problem.id}] ${problem.title}`;
       const issueBody = `# [${problem.title}](${problemUrl})`;
-
       const response = await axios.post(
         `${GITHUB_API_URL}/issues`,
         {
@@ -303,8 +405,9 @@ const sendDiscord = async (problemData, issueUrls, issueSuccess, notionSuccess) 
 
     problemData.forEach((problem, index) => {
       const problemUrl = `<${BAEKJOON_URL}/problem/${problem.id}>`;
-      const issueLink = issueUrls[index] ? `<${issueUrls[index]}>` : "❌ 이슈 생성 실패";
-      message += `🔹 [BOJ ${problem.id}] ${problem.title}\n`;
+      const isCommon = problem.isCommon ? "⭐️" : "⚡️";
+
+      message += `${isCommon} [BOJ ${problem.id}] ${problem.title}\n`;
       message += `🔗 [문제 바로가기](${problemUrl})\n\n`;
     });
 
@@ -320,9 +423,20 @@ const sendDiscord = async (problemData, issueUrls, issueSuccess, notionSuccess) 
 
 // Lambda에서 실행될 핸들러
 const handler = async (event) => {
-  const problemData = await getRandomProblems(1, 1, 1);
-  if (!problemData.length) return { statusCode: 500, body: JSON.stringify({ error: "Failed to fetch problem" }) };
+  // const problemData = await getRandomProblems(1, 1, 1);
+  let problemData = [];
+  const weekday = getKSTDayOfWeekShort();
+
+  if (weekday === "월" || weekday === "화" || weekday === "금") {
+    problemData = await getRandomProblems_MTF(1, 1, 1);
+  } else {
+    problemData = await getRandomProblems_WT(1, 1, 1);
+  }
+
   console.log(problemData);
+
+  if (!problemData.length) return { statusCode: 500, body: JSON.stringify({ error: "Failed to fetch problem" }) };
+
   const { success: issueSuccess, issueUrls } = await createIssue(problemData);
   const notionSuccess = await addToNotionDatabase(problemData);
   await insertProblemHistory(problemData);

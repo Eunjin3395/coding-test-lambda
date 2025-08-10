@@ -25,9 +25,9 @@
       "minParticipants": 1000
     },
     {
-      "tag": "graph_traversal ",
-      "min": "g5",
-      "max": "g2",
+      "tag": "backtracking ",
+      "min": "s2",
+      "max": "g4",
       "minParticipants": 1000
     }
   ],
@@ -147,18 +147,6 @@
       "minParticipants": 1000
     },
     {
-      "tag": "dfs",
-      "min": "g5",
-      "max": "g2",
-      "minParticipants": 1000
-    },
-    {
-      "tag": "bfs",
-      "min": "g5",
-      "max": "g2",
-      "minParticipants": 1000
-    },
-    {
       "tag": "graph_traversal",
       "min": "g5",
       "max": "g2",
@@ -177,7 +165,19 @@
       "minParticipants": 1000
     },
     {
-      "tag": "knapsack",
+      "tag": "set",
+      "min": "s2",
+      "max": "g4",
+      "minParticipants": 1000
+    },
+    {
+      "tag": "shortest_path",
+      "min": "s2",
+      "max": "g4",
+      "minParticipants": 1000
+    },
+    {
+      "tag": "parametric_search",
       "min": "s2",
       "max": "g4",
       "minParticipants": 1000
