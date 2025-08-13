@@ -14,6 +14,14 @@ const EXCLUDE_PARTICIPANTS = ["jennyeunjin", "skfnx13"];
 const IMP_RANDOM_QUERY_CMN = process.env.IMP_RANDOM_QUERY_CMN; // 공통 구현 쿼리
 const IMP_RANDOM_QUERY_INDV = process.env.IMP_RANDOM_QUERY_INDV; // 은진 개인 구현 쿼리
 
+const PARTICIPANTS_TO_ASSIGNEES = {
+  jennyeunjin: "Eunjin3395",
+  skfnx13: "KII1ua",
+  "3veryday": "3veryDay",
+  20011211: "jaewon-ju",
+  dlchdaud123: "dlchdaud123",
+};
+
 const QUERY_FORMAT = process.env.QUERY_FORMAT;
 
 const SOLVEDAC_URL = "https://solved.ac/api/v3/search/problem";
@@ -227,29 +235,33 @@ const getRandomProblems_MTF = async (i, s, t) => {
   imp_problems = imp_problems.map((p) => ({
     ...p,
     isCommon: true,
+    assignees: ASSIGNEES,
   }));
 
   let imp_problems_indv = await selectIndvImpProblems(i); // 추가 구현 문제
   imp_problems_indv = imp_problems_indv.map((p) => ({
     ...p,
     isCommon: false,
+    assignees: "Eunjin3395",
   }));
 
   // 제외할 멤버 및 쿼리 대상 멤버 추출
   const excludeId = EXCLUDE_PARTICIPANTS[Math.floor(Math.random() * EXCLUDE_PARTICIPANTS.length)];
   const participants = PARTICIPANTS.filter((id) => id !== excludeId);
-  console.log(`❌ exclude Id: ${excludeId}, participants: ${participants}`);
+  console.log(`❌ exclude Id: ${excludeId}, participants: ${participants}, assiginees: ${ASSIGNEES}`);
 
   let type_problems = await selectRanProblems(s, t, participants); // 공통 유형 문제
   type_problems = type_problems.map((p) => ({
     ...p,
     isCommon: true,
+    assignees: ASSIGNEES,
   }));
 
   let type_problems_indv = await selectRanProblems(s, t, [excludeId]); // 추가 유형 문제
   type_problems_indv = type_problems_indv.map((p) => ({
     ...p,
     isCommon: false,
+    assignees: PARTICIPANTS_TO_ASSIGNEES[excludeId],
   }));
 
   const problems = [...imp_problems, ...type_problems, ...imp_problems_indv, ...type_problems_indv];
@@ -268,25 +280,29 @@ const getRandomProblems_WT = async (i, s, t) => {
   imp_problems = imp_problems.map((p) => ({
     ...p,
     isCommon: true,
+    assignees: ASSIGNEES,
   }));
 
   let imp_problems_indv = await selectIndvImpProblems(i); // 추가 구현 문제
   imp_problems_indv = imp_problems_indv.map((p) => ({
     ...p,
     isCommon: false,
+    assignees: "Eunjin3395",
   }));
 
   // 제외할 멤버 및 쿼리 대상 멤버 추출
   const excludeId = "skfnx13";
   const participants = PARTICIPANTS.filter((id) => id !== excludeId);
+  const assignees = participants.map((pt) => PARTICIPANTS_TO_ASSIGNEES[pt]);
 
   let type_problems = await selectRanProblems(s, t, participants); // 공통 유형 문제
   type_problems = type_problems.map((p) => ({
     ...p,
     isCommon: true,
+    assignees: assignees,
   }));
 
-  const problems = [...imp_problems, ...imp_problems_indv, ...type_problems];
+  const problems = [...imp_problems, ...type_problems, ...imp_problems_indv];
 
   return problems;
 };
@@ -307,7 +323,7 @@ const createIssue = async (problemData) => {
           title: issueTitle,
           body: issueBody,
           labels: ["✅ Add"],
-          assignees: ASSIGNEES,
+          assignees: problem.assignees,
         },
         {
           headers: {
