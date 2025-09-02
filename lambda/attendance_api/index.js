@@ -19,7 +19,6 @@ const USER_MAP = {
   KII1ua: "j11gen",
   "3veryDay": "haru_95532",
   "jaewon-ju": "jujaeweon_41932",
-  dlchdaud123: "chong2422",
 };
 
 const handler = async (event) => {
