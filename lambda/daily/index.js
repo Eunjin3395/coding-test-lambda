@@ -19,7 +19,6 @@ const PARTICIPANTS_TO_ASSIGNEES = {
   skfnx13: "KII1ua",
   "3veryday": "3veryDay",
   20011211: "jaewon-ju",
-  dlchdaud123: "dlchdaud123",
 };
 
 const QUERY_FORMAT = process.env.QUERY_FORMAT;
@@ -32,6 +31,7 @@ const PROBLEM_HISTORY_TABLE = "ProblemHistory";
 
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
 const LEVELS = ["UR", "B5", "B4", "B3", "B2", "B1", "S5", "S4", "S3", "S2", "S1", "G5", "G4", "G3", "G2", "G1"];
+const LEVEL_TYPE = ["low", "high"];
 
 // pool.json 로드
 const POOL = JSON.parse(fs.readFileSync("pool.json", "utf-8"));
@@ -85,8 +85,9 @@ const shuffleArray = (array) => {
 };
 
 // query string 생성
-function buildSolvedAcQuery({ tag, min, max, minParticipants }, participants) {
+function buildSolvedAcQuery({ tag, level, minParticipants }, participants, level_type) {
   const participantQuery = participants.map((id) => `+!%40${encodeURIComponent(id)}`).join("");
+  const { min, max } = level[level_type];
 
   const finalQuery = QUERY_FORMAT.replace("{min}", min)
     .replace("{max}", max)
@@ -130,9 +131,10 @@ const fetchProblemsFromSolvedAc = async (query, count = 1) => {
  * @param {Array} pool  문제 후보 풀 (selectedPool 또는 totalPool)
  * @param {int} n 문제 개수
  * @param {Array} participants 쿼리에 포함할 아이디 리스트
+ * @param {String} level_type high, low 중 하나의 string
  * @returns
  */
-const getValidProblemFromPool = async (pool, n, participants) => {
+const getValidProblemFromPool = async (pool, n, participants, level_type) => {
   const shuffledPool = shuffleArray([...pool]); // 랜덤 순서
   const selectedTags = new Set();
   const selectedProblems = [];
@@ -141,7 +143,7 @@ const getValidProblemFromPool = async (pool, n, participants) => {
     const tag = candidate.tag.trim();
     if (selectedTags.has(tag)) continue;
 
-    const query = buildSolvedAcQuery(candidate, participants);
+    const query = buildSolvedAcQuery(candidate, participants, level_type);
     const problems = await fetchProblemsFromSolvedAc(query, 1);
 
     if (problems.length > 0) {
@@ -169,12 +171,15 @@ const getValidProblemFromPool = async (pool, n, participants) => {
  * @returns
  */
 const selectRanProblems = async (s, t, participants) => {
+  // 0. level 선택
+  let level = shuffleArray(LEVEL_TYPE);
+
   // 1. selectedPool에서 유효한 문제 s개 선택
-  const { problems: selectedProblem, tags: selectedTag } = await getValidProblemFromPool(SELECTED_POOL, s, participants);
+  const { problems: selectedProblem, tags: selectedTag } = await getValidProblemFromPool(SELECTED_POOL, s, participants, level[0]);
 
   // 2. totalPool에서 같은 태그 제외 후 유효한 문제 t개 선택
   const remaining = TOTAL_POOL.filter((p) => p.tag.trim() !== selectedTag);
-  const { problems: otherProblem } = await getValidProblemFromPool(remaining, t, participants);
+  const { problems: otherProblem } = await getValidProblemFromPool(remaining, t, participants, level[1]);
 
   // 리스트 병합 후 섞어서 반환
   const shuffled_problems = shuffleArray([...selectedProblem, ...otherProblem]);
@@ -202,26 +207,6 @@ const selectIndvImpProblems = async (n) => {
     ...p,
     isCommon: false,
   }));
-};
-
-/**
- * 전체 문제 랜덤 추출
- * @param {int} i 구현 문제 개수
- * @param {int} s 특정 유형 문제 개수
- * @param {int} t 전체 유형 문제 개수
- */
-const getRandomProblems = async (i, s, t) => {
-  try {
-    const imp_problems = await selectCommonImpProblems(i);
-    const random_problems = await selectRanProblems(s, t);
-    const imp_problems_indv = await selectIndvImpProblems(i);
-    const problems = [...imp_problems, ...random_problems, ...imp_problems_indv];
-
-    return problems;
-  } catch (error) {
-    console.error("Error fetching random problems:", error);
-    return [];
-  }
 };
 
 /**
