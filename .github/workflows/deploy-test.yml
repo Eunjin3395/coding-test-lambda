@@ -25,11 +25,11 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        working-directory: ./lambda/daily
+        working-directory: ./lambda/test
         run: npm install --omit=dev
 
       - name: Zip Lambda function
-        working-directory: ./lambda/daily
+        working-directory: ./lambda/test
         run: zip -r lambda.zip .
 
       - name: Deploy to AWS Lambda
@@ -39,7 +39,7 @@ jobs:
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws_region: ${{ env.REGION }}
           function_name: ${{ env.FUNCTION_NAME }}
-          zip_file: lambda/daily/lambda.zip
+          zip_file: lambda/test/lambda.zip
 
       - name: Wait for Lambda update to finish
         run: sleep 10
