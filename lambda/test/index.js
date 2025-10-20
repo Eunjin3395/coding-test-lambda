@@ -6,6 +6,8 @@ require("dotenv").config();
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 const GITHUB_API_URL = process.env.GITHUB_API_URL;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
 // DynamoDB
 const PROBLEM_HISTORY_TABLE = "ProblemHistory";
@@ -13,6 +15,7 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 
 const SOLVEDAC_URL = "https://solved.ac/api/v3/search/problem";
 const BAEKJOON_URL = "https://www.acmicpc.net";
+const NOTION_PAGE_URL = "https://api.notion.com/v1/pages";
 
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X)";
 const LEVELS = ["UR", "B5", "B4", "B3", "B2", "B1", "S5", "S4", "S3", "S2", "S1", "G5", "G4", "G3", "G2", "G1"];
@@ -50,11 +53,12 @@ const DIFFICULTY_LEVELS = {
   SL: "s4..s3",
   SH: "s2..s1",
   GL: "g5",
-  GH: "g4..g2",
+  GH: "g4..g3",
 };
 
-const EXCLUDE_USERS = "!%40jennyeunjin+!%403veryday+!%4020011211";
+const EXCLUDE_USERS = "!%40jennyeunjin+!%403veryday+!%40skfnx13";
 const QUERY_SUFFIX = "+s%231000..+%25ko";
+const IMP_RANDOM_QUERY = "(*g5..g1+!%40skfnx13+!%403veryday+s%231000..+%25ko+%23simulation)&page=1&sort=random&direction=asc";
 
 // 날짜 유틸
 const getTodayKST = () =>
@@ -145,13 +149,22 @@ const fetchTaggedProblems = async () => {
   return shuffleArray(problems);
 };
 
+/**
+ * 공통 구현 문제 랜덤 n개 추출
+ * @param {int} n
+ */
+const fetchImpProblems = async (n) => {
+  const problem = await fetchProblemsFromSolvedAc(IMP_RANDOM_QUERY, n);
+  return problem;
+};
+
 // GitHub 이슈 생성
 const createIssue = async (problemData) => {
   const title = `${getTodayKST()} : 모의 코딩테스트`;
   let body = "";
   for (const problem of problemData) {
     const problemUrl = `${BAEKJOON_URL}/problem/${problem.id}`;
-    body += `### [${problem.id}: ${problem.title}](${problemUrl})\n`;
+    body += `### [${getTodayKST()} : \[BOJ ${problem.id}\] ${problem.title}](${problemUrl})\n`;
   }
 
   try {
@@ -240,17 +253,19 @@ const addToNotionDatabase = async (problemData) => {
 
 // 🧑Lambda Handler
 const handler = async () => {
-  const problems = await fetchTaggedProblems();
+  const tag_problems = await fetchTaggedProblems();
+  const imp_problems = await fetchImpProblems(1);
+  const problems = [...tag_problems, ...imp_problems];
   console.log(problems);
 
-  if (problems.length !== MAX_NUM) {
+  if (problems.length !== MAX_NUM + 1) {
     console.error("❌ 문제 수 부족");
     return { statusCode: 500, body: "문제 수 부족" };
   }
 
   const issueUrl = await createIssue(problems);
   await addToNotionDatabase(problems);
-  await insertProblemHistory(problems); // ✅ DynamoDB 저장 추가
+  // await insertProblemHistory(problems); // ✅ DynamoDB 저장 추가
   await sendDiscord(problems, issueUrl);
 
   return { statusCode: 200, body: JSON.stringify({ problems }) };
