@@ -18,12 +18,11 @@ const ATTENDANCE_TABLE = "Attendance";
 const MESSAGE_HISTORY_TABLE = "AttendanceMessageHistory";
 
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
-const USERNAMES = ["eunjin3395", "j11gen", "haru_95532", "jujaeweon_41932"];
+const USERNAMES = ["eunjin3395", "j11gen", "haru_95532"];
 const USER_MAP = {
   eunjin3395: "은진",
   j11gen: "성윤",
   haru_95532: "현서",
-  jujaeweon_41932: "재원",
 };
 const STATUS_MAP = {
   present: "출석 🟢",
