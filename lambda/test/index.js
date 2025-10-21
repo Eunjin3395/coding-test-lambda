@@ -19,14 +19,14 @@ const NOTION_PAGE_URL = "https://api.notion.com/v1/pages";
 
 const USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X)";
 const LEVELS = ["UR", "B5", "B4", "B3", "B2", "B1", "S5", "S4", "S3", "S2", "S1", "G5", "G4", "G3", "G2", "G1"];
-const MAX_NUM = 4;
+const MAX_NUM = 3;
 
 const TAG_WEIGHTS = {
   dp: 3,
   graph_traversal: 2,
   greedy: 3,
-  binary_search: 2,
-  backtracking: 3,
+  binary_search: 3,
+  backtracking: 2,
   queue: 2,
   stack: 2,
   trees: 1,
@@ -50,14 +50,12 @@ const TAG_WEIGHTS = {
 };
 
 const DIFFICULTY_LEVELS = {
-  SL: "s4..s3",
-  SH: "s2..s1",
-  GL: "g5",
-  GH: "g4..g3",
+  GL: "g5..g4",
+  GH: "g3..g2",
 };
 
 const EXCLUDE_USERS = "!%40jennyeunjin+!%403veryday+!%40skfnx13";
-const QUERY_SUFFIX = "+s%231000..+%25ko";
+const QUERY_SUFFIX = "+s%23800..+%25ko";
 const IMP_RANDOM_QUERY = "(*g5..g1+!%40skfnx13+!%403veryday+s%231000..+%25ko+%23simulation)&page=1&sort=random&direction=asc";
 
 // 날짜 유틸
@@ -97,7 +95,7 @@ const getWeightedRandomTags = (count, exclude = []) => {
 };
 
 // 쿼리 문자열 생성
-const buildQuery = (tag, level) => `*${DIFFICULTY_LEVELS[level]}+${EXCLUDE_USERS}${QUERY_SUFFIX}+%23${tag}&page=1&sort=random&direction=asc`;
+const buildQuery = (tag, level) => `*${DIFFICULTY_LEVELS[level]}+${EXCLUDE_USERS}${QUERY_SUFFIX}+%23${tag}+!%23geometry&page=1&sort=random&direction=asc`;
 
 // solved.ac 문제 검색
 const fetchProblemsFromSolvedAc = async (query, count = 1) => {
@@ -118,14 +116,14 @@ const fetchProblemsFromSolvedAc = async (query, count = 1) => {
 
 // 태그 기반 문제 가져오기
 const fetchTaggedProblems = async () => {
-  const bruteCount = 1; // bruteforcing 무조건 1개
-  const randCount = MAX_NUM - bruteCount;
+  // const bruteCount = 1; // bruteforcing 무조건 1개
+  // const randCount = MAX_NUM - bruteCount;
 
-  const selectedTags = getWeightedRandomTags(randCount, ["bruteforcing"]);
-  const tags = [...selectedTags, "bruteforcing"];
+  const tags = getWeightedRandomTags(MAX_NUM);
+  // const tags = [...selectedTags, "bruteforcing"];
   console.log("🔵 태그:", tags);
 
-  const levelKeys = shuffleArray(["SL", "SH", "GL", "GH"]);
+  const levelKeys = shuffleArray(["GL", "GL", "GH"]);
   let problems = [];
 
   for (let i = 0; i < MAX_NUM; i++) {
@@ -139,6 +137,7 @@ const fetchTaggedProblems = async () => {
 
     while (result.length === 0 && retry < 10 && !isBrute) {
       const newTag = getWeightedRandomTags(1, tags)[0];
+      console.log("retry tag:", newTag);
       query = buildQuery(newTag, level);
       result = await fetchProblemsFromSolvedAc(query, 1);
       retry++;
@@ -265,7 +264,7 @@ const handler = async () => {
 
   const issueUrl = await createIssue(problems);
   await addToNotionDatabase(problems);
-  // await insertProblemHistory(problems); // ✅ DynamoDB 저장 추가
+  await insertProblemHistory(problems); // ✅ DynamoDB 저장 추가
   await sendDiscord(problems, issueUrl);
 
   return { statusCode: 200, body: JSON.stringify({ problems }) };
