@@ -17,9 +17,12 @@ const ATTENDANCE_TABLE = "Attendance";
 const MESSAGE_HISTORY_TABLE = "AttendanceMessageHistory";
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 
-const USERNAMES = ["j11gen"];
+const USERNAMES = ["j11gen", "gimyeongman0658", "invite_me_41", "incredible_dragon_84712"];
 const USER_MAP = {
   j11gen: "성윤",
+  gimyeongman0658: "영만",
+  invite_me_41: "문형",
+  incredible_dragon_84712: "제희",
 };
 
 const STATUS_MAP = {
