@@ -16,9 +16,13 @@ const PROBLEM_HISTORY_TABLE = "ProblemHistory";
 // github ID : discord ID
 const USER_MAP = {
   Eunjin3395: "eunjin3395",
-  KII1ua: "j11gen",
-  "3veryDay": "haru_95532",
-  "jaewon-ju": "jujaeweon_41932",
+  KII1ua: "j11gen", // 성윤
+  "3veryDay": "haru_95532", // 현서
+  dlchdaud123: "chong2422", // 총명
+  sksn12: "gimyeongman0658", // 영만
+  "alirz-pixel": "invite_me_41", // 문형
+  esc10946: "gimhojun0668", // 호준
+  pinkkj: "incredible_dragon_84712", // 제희
 };
 
 const handler = async (event) => {
