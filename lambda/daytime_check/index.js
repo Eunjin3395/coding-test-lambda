@@ -17,20 +17,17 @@ const ATTENDANCE_TABLE = "Attendance";
 const MESSAGE_HISTORY_TABLE = "AttendanceMessageHistory";
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 
-const USERNAMES = ["eunjin3395", "j11gen", "haru_95532"];
+const USERNAMES = ["haru_95532", "chong2422", "gimhojun0668"];
 const USER_MAP = {
-  eunjin3395: "은진",
-  j11gen: "성윤",
   haru_95532: "현서",
+  chong2422: "총명",
+  gimhojun0668: "호준",
 };
 
 const STATUS_MAP = {
   present: "출석 🟢",
-  wildcard_present: "출석* 🟢",
   late: "지각 🟠",
-  wildcard_late: "지각* 🟠",
   ongoing: "진행 🟡",
-  wildcard_ongoing: "진행* 🟡",
   dayoff: "휴무 :white_circle:",
   absent: "결석 🔴",
 };
@@ -64,8 +61,8 @@ const timeOnly = (str) => {
 const handler = async () => {
   const now = dayjs().tz("Asia/Seoul");
   const today = now.format("YYYY-MM-DD");
-  const deadline1 = dayjs.tz(`${today} 07:11:00`, "Asia/Seoul");
-  const deadline2 = dayjs.tz(`${today} 08:31:00`, "Asia/Seoul");
+  const deadline1 = dayjs.tz(`${today} 07:01:00`, "Asia/Seoul");
+  const deadline2 = dayjs.tz(`${today} 07:31:00`, "Asia/Seoul");
   const resultSummary = [];
 
   for (const username of USERNAMES) {
@@ -86,32 +83,17 @@ const handler = async () => {
     if (attendance !== "dayoff") {
       const hasJoined = !!joinedAt;
 
-      if (attendance === "wildcard") {
-        // 특수 출석
-        if (!hasJoined) {
-          newStatus = "absent"; // 입장 안한 경우
-        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline2)) {
-          newStatus = "absent"; // 입장 시각 결석인 경우
-        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
-          newStatus = "wildcard_late"; // 입장 시각 지각인 경우
-        } else if (pr.length >= 1) {
-          newStatus = "wildcard_present"; // 문제 1개 이상 제출한 경우
-        } else {
-          newStatus = "wildcard_ongoing";
-        }
+      // 일반 출석
+      if (!hasJoined) {
+        newStatus = "absent"; // 입장 안한 경우
+      } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline2)) {
+        newStatus = "absent"; // 입장 시각 결석인 경우
+      } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
+        newStatus = "late"; // 입장 시각 지각인 경우
+      } else if (pr.length >= 2) {
+        newStatus = "present"; // 문제 2개 이상 제출한 경우
       } else {
-        // 일반 출석
-        if (!hasJoined) {
-          newStatus = "absent"; // 입장 안한 경우
-        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline2)) {
-          newStatus = "absent"; // 입장 시각 결석인 경우
-        } else if (dayjs.tz(joinedAt, "Asia/Seoul").isAfter(deadline1)) {
-          newStatus = "late"; // 입장 시각 지각인 경우
-        } else if (pr.length >= 2) {
-          newStatus = "present"; // 문제 2개 이상 제출한 경우
-        } else {
-          newStatus = "ongoing";
-        }
+        newStatus = "ongoing";
       }
 
       await dynamo
@@ -133,7 +115,7 @@ const handler = async () => {
   }
 
   // Discord 메시지 작성
-  let message = `## 🗓️ ${today}\n`;
+  let message = `## ☀️ ${today}\n`;
   for (const r of resultSummary) {
     const joinedTime = timeOnly(r.joinedAt);
     message += `- **${USER_MAP[r.username]}**: ${r.attendance} | 제출: ${r.prCount} | *${joinedTime}*\n`;
@@ -149,8 +131,8 @@ const handler = async () => {
       TableName: MESSAGE_HISTORY_TABLE,
       Item: {
         date: today,
-        messageId,
-        sentAt: now.toISOString(),
+        messageId: [messageId],
+        sentAt: [now.toISOString()],
       },
     })
     .promise();
