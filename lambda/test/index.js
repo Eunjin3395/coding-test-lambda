@@ -50,13 +50,14 @@ const TAG_WEIGHTS = {
 };
 
 const DIFFICULTY_LEVELS = {
-  GL: "g5..g4",
-  GH: "g3..g2",
+  GL: "g4..g3",
+  GH: "g2..g1",
 };
 
-const EXCLUDE_USERS = "!%40jennyeunjin+!%403veryday+!%40skfnx13";
+const EXCLUDE_USERS = "!%403veryday+!%40skfnx13+!%40dlchdaud123+!%40esc10946+!%40ansrl+!%40juventa23";
 const QUERY_SUFFIX = "+s%23800..+%25ko";
-const IMP_RANDOM_QUERY = "(*g5..g1+!%40skfnx13+!%403veryday+s%231000..+%25ko+%23simulation)&page=1&sort=random&direction=asc";
+const IMP_RANDOM_QUERY =
+  "(*g5..g1+!%403veryday+!%40skfnx13+!%40dlchdaud123+!%40esc10946+!%40ansrl+!%40juventa23+s%231000..+%25ko+%23simulation)&page=1&sort=random&direction=asc";
 
 // 날짜 유틸
 const getTodayKST = () =>
@@ -116,11 +117,7 @@ const fetchProblemsFromSolvedAc = async (query, count = 1) => {
 
 // 태그 기반 문제 가져오기
 const fetchTaggedProblems = async () => {
-  // const bruteCount = 1; // bruteforcing 무조건 1개
-  // const randCount = MAX_NUM - bruteCount;
-
   const tags = getWeightedRandomTags(MAX_NUM);
-  // const tags = [...selectedTags, "bruteforcing"];
   console.log("🔵 태그:", tags);
 
   const levelKeys = shuffleArray(["GL", "GL", "GH"]);
@@ -129,13 +126,12 @@ const fetchTaggedProblems = async () => {
   for (let i = 0; i < MAX_NUM; i++) {
     const tag = tags[i];
     const level = levelKeys[i];
-    const isBrute = tag === "bruteforcing";
 
     let query = buildQuery(tag, level);
     let result = await fetchProblemsFromSolvedAc(query, 1);
     let retry = 0;
 
-    while (result.length === 0 && retry < 10 && !isBrute) {
+    while (result.length === 0 && retry < 10) {
       const newTag = getWeightedRandomTags(1, tags)[0];
       console.log("retry tag:", newTag);
       query = buildQuery(newTag, level);
