@@ -22,6 +22,7 @@ const USER_MAP = {
   haru_95532: "현서",
   chong2422: "총명",
   gimhojun0668: "호준",
+  seon3831: "선하",
 };
 
 const STATUS_MAP = {
