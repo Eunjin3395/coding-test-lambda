@@ -7,11 +7,7 @@ require("dotenv").config();
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const dynamo = new AWS.DynamoDB.DocumentClient({
-  region: "ap-northeast-2",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
+const dynamo = new AWS.DynamoDB.DocumentClient();
 
 const ATTENDANCE_TABLE = "Attendance";
 const MESSAGE_HISTORY_TABLE = "AttendanceMessageHistory";
