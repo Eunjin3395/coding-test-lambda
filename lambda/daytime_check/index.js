@@ -13,7 +13,7 @@ const ATTENDANCE_TABLE = "Attendance";
 const MESSAGE_HISTORY_TABLE = "AttendanceMessageHistory";
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 
-const USERNAMES = ["haru_95532", "chong2422", "gimhojun0668"];
+const USERNAMES = ["haru_95532", "chong2422", "gimhojun0668", "seon3831"];
 const USER_MAP = {
   haru_95532: "현서",
   chong2422: "총명",
