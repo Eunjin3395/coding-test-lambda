@@ -5,11 +5,7 @@ const utc = require("dayjs/plugin/utc");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const dynamo = new AWS.DynamoDB.DocumentClient({
-  region: "ap-northeast-2",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
+const dynamo = new AWS.DynamoDB.DocumentClient();
 const ATTENDANCE_TABLE = "Attendance";
 const PROBLEM_HISTORY_TABLE = "ProblemHistory";
 
@@ -23,6 +19,7 @@ const USER_MAP = {
   "alirz-pixel": "invite_me_41", // 문형
   esc10946: "gimhojun0668", // 호준
   pinkkj: "incredible_dragon_84712", // 제희
+  sunha20: "seon3831", // 선하
 };
 
 const handler = async (event) => {
@@ -45,7 +42,13 @@ const handler = async (event) => {
   }
 
   const normalizedProblemId = String(problemId);
-  const today = dayjs().tz("Asia/Seoul").format("YYYY-MM-DD");
+  const now = dayjs().tz("Asia/Seoul");
+  const today = now.format("YYYY-MM-DD");
+
+  // 00:00 ~ 02:00 사이라면 하루 전날로 조정
+  if (now.hour() >= 0 && now.hour() < 2) {
+    today = now.subtract(1, "day").format("YYYY-MM-DD");
+  }
 
   try {
     // ✅ ProblemHistory에서 문제 번호 유효성 확인
