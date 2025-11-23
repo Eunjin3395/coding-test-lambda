@@ -8,13 +8,13 @@ require("dotenv").config();
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const dynamo = new AWS.DynamoDB.DocumentClient({});
+const dynamo = new AWS.DynamoDB.DocumentClient();
 
 const ATTENDANCE_TABLE = "Attendance";
 const MESSAGE_HISTORY_TABLE = "AttendanceMessageHistory";
 
 const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
-const USERNAMES = ["haru_95532", "chong2422", "gimhojun0668", "j11gen", "gimyeongman0658", "invite_me_41", "incredible_dragon_84712"];
+const USERNAMES = ["haru_95532", "chong2422", "gimhojun0668", "seon3831", "j11gen", "gimyeongman0658", "invite_me_41", "incredible_dragon_84712"];
 const USER_MAP = {
   // eunjin3395: "은진",
   haru_95532: "현서",
@@ -24,6 +24,7 @@ const USER_MAP = {
   gimyeongman0658: "영만",
   invite_me_41: "문형",
   incredible_dragon_84712: "제희",
+  seon3831: "선하",
 };
 
 const STATUS_MAP = {
