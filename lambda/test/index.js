@@ -54,10 +54,10 @@ const DIFFICULTY_LEVELS = {
   GH: "g2..g1",
 };
 
-const EXCLUDE_USERS = "!%403veryday+!%40skfnx13+!%40dlchdaud123+!%40esc10946+!%40ansrl+!%40juventa23";
+const EXCLUDE_USERS = "!%403veryday+!%40skfnx13+!%40dlchdaud123+!%40esc10946+!%40ansrl+!%40juventa23+!%40sksn12+!%40c_seonha2";
 const QUERY_SUFFIX = "+s%23800..+%25ko";
 const IMP_RANDOM_QUERY =
-  "(*g5..g1+!%403veryday+!%40skfnx13+!%40dlchdaud123+!%40esc10946+!%40ansrl+!%40juventa23+s%231000..+%25ko+%23simulation)&page=1&sort=random&direction=asc";
+  "(*g5..g1+!%403veryday+!%40skfnx13+!%40dlchdaud123+!%40esc10946+!%40ansrl+!%40juventa23+!%40sksn12+!%40c_seonha2+s%231000..+%25ko+%23simulation)&page=1&sort=random&direction=asc";
 
 // 날짜 유틸
 const getTodayKST = () =>
